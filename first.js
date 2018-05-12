@@ -112,7 +112,6 @@ function fromTo(start, end) {
 
 function element(arr, gen) {
     var i = 0;
-
     var g = gen;
 
     if (gen === undefined) {
@@ -120,8 +119,7 @@ function element(arr, gen) {
     }
 
     return function () {
-	var value = gen();
-
+	var value = g();
 	if (value !== undefined) {
 	    return arr[value];
 	}
@@ -164,8 +162,12 @@ function concat(gen1, gen2) {
     };
 }
 
+
 function concat_all(...gens) {
+
+    
     var next_gen = element(gens);
+
     var gen = next_gen();
 
     return function recur() {
@@ -174,10 +176,12 @@ function concat_all(...gens) {
 	if (value !== undefined) {
 	    return value;
 	} else {
+	    
 	    gen = next_gen();
+	   
 
 	    if (gen !== undefined) {
-		recur();
+		return recur();
 	    }
 	}
 
@@ -185,60 +189,152 @@ function concat_all(...gens) {
     };
 }
 
-var conc = concat_all(fromTo(0,3), fromTo(0,2));
-console.log(conc());
-console.log(conc());
-console.log(conc());
-console.log(conc());
-console.log(conc());
+function gensymfactory(prefix) {
 
-console.log(conc());
+    var number = 0;
+
+    return function() {
+	number += 1;
+	return prefix + number;
+    };
+
+}
+
+function gensymfactoryfactory(unary_incrementor, seed) {
+    return function() {
+	var number = seed;
+	return function() {
+	    number = unary_incrementor(number);
+	    return prefix + number;
+	};
+    };
+}
+
+function fibof2(a, b) {
+
+    return concat(
+	element([a, b]),
+	function () {
+	    var next = a + b;
+	    a = b;
+	    b = next;
+	    return next;
+	});
+}
+    
+function fibof(a, b) {
+    var counter = 0;
+
+    return function () {
+	var next;
+
+	switch (counter) {
+	case 0:
+	    counter = 1;
+	    return a;
+	case 1:
+	    counter = 2;
+	    return b;
+	default:
+	    next = a + b;
+	    a = b;
+	    b = next;
+	    return next;
+	}
+    };
+}
+
+function counter(seed) {
+    return {
+	up: function () {
+	    seed++;
+	    return seed;
+	},
+	down: function () {
+	    seed--;
+	    return seed;
+	}
+    };
+    
+  
+}
+
+var obj = counter(10);
+debug(obj);
+up = obj.up;
+down = obj.down;
+debug(up());
+debug(down());
+debug(down());
+debug(up());
+/*
+
+var fib = fibof2(0,1);
+debug(fib());
+debug(fib());
+debug(fib());
+debug(fib());
+debug(fib());
+debug(fib());
+debug(fib());
+debug(fib());
+
+
+/*
+var conc = concat_all(fromTo(0,3), fromTo(0,2));
+debug(conc());
+debug(conc());
+debug(conc());
+debug(conc());
+debug(conc());
+
+debug(conc());
 
 /*
 
 var fil = filter(fromTo(0,5), (a) => (a%3) === 0);
-console.log(fil());
-console.log(fil());
-console.log(fil());
+debug(fil());
+debug(fil());
+debug(fil());
 /*
 var index = from(0);
-console.log(index());
-console.log(index());
-console.log(index());
-console.log(index());
+debug(index());
+debug(index());
+debug(index());
+debug(index());
 
 var index_limited = to(from(1), 3);
-console.log(index_limited());
-console.log(index_limited());
-console.log(index_limited());
-console.log(index_limited());
+debug(index_limited());
+debug(index_limited());
+debug(index_limited());
+debug(index_limited());
 
 var index_ranged = fromTo(0, 3);
-console.log(index_ranged());
-console.log(index_ranged());
-console.log(index_ranged());
-console.log(index_ranged());
+debug(index_ranged());
+debug(index_ranged());
+debug(index_ranged());
+debug(index_ranged());
 
 var limited_add = limited(add, 1);
-console.log("********");
-console.log(limited_add(1,2));
-console.log(limited_add(1,2));
-console.log("********");
+debug("********");
+debug(limited_add(1,2));
+debug(limited_add(1,2));
+debug("********");
 
 var bus = reverse(sub);
-console.log(bus(3,2));
+debug(bus(3,2));
 var doubl = twice(add);
 var square = twice(mul);
 var d = square(11);
-console.log("hello: " + d);
+debug("hello: " + d);
 var add3 = curry(add, 3);
 var three = identityf(3);
 var ff = liftf(add)(3);
 var mulf = liftf(mul);
 
 var c = composeu(doubl, square)(5);
-console.log("-----");
-console.log(c);
+debug("-----");
+debug(c);
 
 //3 different ways of writing inc function
 
@@ -251,12 +347,12 @@ var inc2 = liftf(add)(1);
 //third way
 var inc3 = addf(1);
 
-console.log(inc3(5));
-console.log(inc3(inc(5)));
+debug(inc3(5));
+debug(inc3(inc(5)));
 
 
 
-console.log(mulf(5)(5));
-console.log(ff(4));
-console.log(add3(5));
+debug(mulf(5)(5));
+debug(ff(4));
+debug(add3(5));
 */
